@@ -1,0 +1,64 @@
+{
+	"name": "medusa-mondialrelay",
+	"version": "1.0.1",
+	"description": "Medusa v2 fulfillment provider for Mondial Relay shipping",
+	"author": "Théo Daguier <theo.daguier@icloud.com>",
+	"license": "MIT",
+	"keywords": [
+		"medusa-v2",
+		"medusa-plugin-shipping",
+		"medusa-plugin-integration",
+		"medusa-fulfillment",
+		"mondial-relay",
+		"shipping"
+	],
+	"main": ".medusa/server/providers/mondialrelay/index.js",
+	"exports": {
+		"./package.json": "./package.json",
+		"./providers/*": "./.medusa/server/providers/*/index.js",
+		"./.medusa/admin": {
+			"import": "./.medusa/server/src/admin/index.mjs",
+			"require": "./.medusa/server/src/admin/index.js"
+		},
+		"./*": "./.medusa/server/*.js"
+	},
+	"files": [
+		".medusa",
+		"!.medusa/server/src/**/__tests__",
+		"!.medusa/server/src/**/__fixtures__",
+		"!.medusa/server/src/**/__mocks__"
+	],
+	"scripts": {
+		"build": "medusa plugin:build",
+		"watch": "medusa plugin:develop",
+		"publish:local": "medusa plugin:publish",
+		"test": "jest --passWithNoTests src",
+		"prepublishOnly": "medusa plugin:build"
+	},
+	"dependencies": {
+		"@frontboi/mondial-relay": "^1.2.49",
+		"@medusajs/icons": "^2.12.1",
+		"@medusajs/ui": "^4.0.29",
+		"axios": "^1.6.8",
+		"xml2js": "^0.6.2"
+	},
+	"devDependencies": {
+		"@medusajs/admin-sdk": "^2.12.1",
+		"@medusajs/cli": "^2.0.0",
+		"@medusajs/framework": "^2.0.0",
+		"@medusajs/medusa": "^2.0.0",
+		"@medusajs/test-utils": "^2.0.0",
+		"@swc/core": "^1.5.7",
+		"@types/node": "^20.0.0",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.3.0",
+		"yalc": "^1.0.0-pre.53"
+	},
+	"peerDependencies": {
+		"@medusajs/admin-sdk": "^2.0.0",
+		"@medusajs/cli": "^2.0.0",
+		"@medusajs/framework": "^2.0.0",
+		"@medusajs/medusa": "^2.0.0",
+		"@medusajs/test-utils": "^2.0.0"
+	}
+}
