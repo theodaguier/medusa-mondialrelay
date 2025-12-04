@@ -1,15 +1,16 @@
-# @theodaguier/medusa-fulfillment-mondialrelay
+# medusa-mondialrelay
 
-[![npm version](https://img.shields.io/npm/v/@theodaguier/medusa-fulfillment-mondialrelay.svg)](https://www.npmjs.com/package/@theodaguier/medusa-fulfillment-mondialrelay)
+[![npm version](https://img.shields.io/npm/v/medusa-mondialrelay.svg)](https://www.npmjs.com/package/medusa-mondialrelay)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A **Medusa v2** fulfillment provider plugin for [Mondial Relay](https://www.mondialrelay.fr/) shipping services. Supports both Point Relais (pickup point) and Home Delivery options with dynamic pricing.
+A **Medusa v2** fulfillment provider plugin for [Mondial Relay](https://www.mondialrelay.fr/) shipping services. Supports both Point Relais (pickup point) and Home Delivery options with real-time pricing via [@frontboi/mondial-relay](https://www.npmjs.com/package/@frontboi/mondial-relay).
 
 ## Features
 
 - 🏪 **Point Relais** - Pickup point delivery with interactive selector
-- 🏠 **Home Delivery** - Door-to-door delivery with separate pricing
-- 💰 **Dynamic Pricing** - Weight-based shipping cost calculation
+- 🏠 **Home Delivery** - Door-to-door delivery (+3€ surcharge)
+- 💰 **Real Pricing** - Uses official Mondial Relay pricing via `@frontboi/mondial-relay`
+- 🌍 **Multi-country** - FR, BE, LU, NL, ES, PT, DE, IT, AT
 - 🏷️ **Label Generation** - PDF shipping label creation
 - 📦 **Shipment Tracking** - Tracking number generation
 - 🖨️ **Admin Widget** - Print labels directly from order details
@@ -23,7 +24,7 @@ A **Medusa v2** fulfillment provider plugin for [Mondial Relay](https://www.mond
 ## Installation
 
 ```bash
-npm install @theodaguier/medusa-fulfillment-mondialrelay
+npm install medusa-mondialrelay
 ```
 
 ## Configuration
@@ -44,7 +45,7 @@ export default defineConfig({
       options: {
         providers: [
           {
-            resolve: "@theodaguier/medusa-fulfillment-mondialrelay/providers/mondialrelay",
+            resolve: "medusa-mondialrelay/providers/mondialrelay",
             id: "mondialrelay-fulfillment",
             options: {
               login: process.env.MONDIAL_RELAY_LOGIN,
@@ -114,39 +115,36 @@ In the Medusa Admin, create shipping options:
    - **Price Type**: `Calculated`
    - **Fulfillment Provider**: `mondialrelay-fulfillment`
 
-> **Note**: The plugin detects home delivery by looking for "domicile" in the option name, or you can set `{"type": "home"}` in the option's Data field.
+> **Note**: The plugin detects home delivery by looking for "domicile" in the option name.
 
 ## Pricing
 
-The plugin calculates shipping prices based on package weight:
+### Real-time Pricing via @frontboi/mondial-relay
 
-### Point Relais Prices (default)
+The plugin uses [`@frontboi/mondial-relay`](https://www.npmjs.com/package/@frontboi/mondial-relay) for official Mondial Relay pricing based on:
+- **Package weight** (250g to 30kg)
+- **Destination country** (FR, BE, LU, NL, ES, PT, DE, IT, AT)
 
-| Weight | Price |
-|--------|-------|
-| 0-1 kg | €4.95 |
-| 1-3 kg | €5.95 |
-| 3-5 kg | €6.95 |
-| 5-10 kg | €8.95 |
-| 10+ kg | €12.95 |
+### Home Delivery Surcharge
 
-### Home Delivery Prices
+Home delivery options automatically add a **+3€ surcharge** to the base Point Relais price.
 
-| Weight | Price |
-|--------|-------|
-| 0-1 kg | €7.95 |
-| 1-3 kg | €8.95 |
-| 3-5 kg | €9.95 |
-| 5-10 kg | €12.95 |
-| 10+ kg | €16.95 |
+### Example Prices (France)
 
-> **Note**: Prices can be customized by modifying the plugin source or using a custom pricing module.
+| Weight | Point Relais | Home Delivery |
+|--------|--------------|---------------|
+| 500g   | ~3.99€       | ~6.99€        |
+| 1kg    | ~4.49€       | ~7.49€        |
+| 2kg    | ~5.49€       | ~8.49€        |
+| 5kg    | ~7.99€       | ~10.99€       |
+
+> Prices are fetched in real-time from Mondial Relay's official pricing grid.
 
 ## Storefront Integration
 
 ### Point Relais Selector
 
-For Point Relais delivery, you need to integrate a pickup point selector in your storefront. The plugin expects the following data when setting the shipping method:
+For Point Relais delivery, integrate a pickup point selector. The plugin expects:
 
 ```typescript
 await setShippingMethod({
@@ -154,7 +152,7 @@ await setShippingMethod({
   shippingMethodId: selectedOptionId,
   data: {
     shipping_option_name: "Mondial Relay - Point Relais",
-    parcel_shop_id: "020340", // Pickup point ID
+    parcel_shop_id: "020340",
     parcel_shop_name: "Relay Shop Name",
     parcel_shop_address: "123 Shop Street",
     parcel_shop_city: "Paris",
@@ -164,8 +162,6 @@ await setShippingMethod({
 ```
 
 ### Recommended: @frontboi/mondial-relay
-
-For a ready-to-use Point Relais selector widget:
 
 ```bash
 npm install @frontboi/mondial-relay
@@ -186,8 +182,6 @@ import { ParcelShopSelector } from "@frontboi/mondial-relay"
 
 ### Home Delivery
 
-For home delivery, just pass the shipping option name:
-
 ```typescript
 await setShippingMethod({
   cartId: cart.id,
@@ -202,57 +196,31 @@ await setShippingMethod({
 
 ### Label Printing Widget
 
-The plugin adds a widget to the order details page in Medusa Admin. For orders fulfilled with Mondial Relay, you'll see:
+The plugin adds a widget to the order details page for:
+- ✅ Tracking number display
+- ✅ Pickup point info (if applicable)
+- 🖨️ "Print Label" button for PDF download
 
-- ✅ Tracking number
-- ✅ Pickup point name (if applicable)
-- 🖨️ "Print Label" button to download the shipping label PDF
+## Supported Countries
 
-## API Reference
-
-### Provider Methods
-
-| Method | Description |
-|--------|-------------|
-| `validateOption()` | Validates shipping option configuration |
-| `validateFulfillmentData()` | Validates fulfillment data before creation |
-| `calculatePrice()` | Calculates shipping cost based on weight and delivery type |
-| `createFulfillment()` | Creates a shipment and generates label |
-| `cancelFulfillment()` | Cancels an existing shipment |
-| `getFulfillmentDocuments()` | Retrieves shipping label PDF |
-
-### Delivery Modes
-
-| Mode | API Value | Description |
-|------|-----------|-------------|
-| Point Relais | `PR` | Pickup point delivery |
-| Home Delivery | `HOM` | Door-to-door delivery |
-| Locker | `LOCKER` | Parcel locker delivery |
-
-## Troubleshooting
-
-### "Le plan de tri est introuvable"
-
-This error occurs when the pickup point ID format is incorrect. The plugin automatically prefixes the ID with the country code (e.g., `FR-020340`).
-
-### Price shows as €495.00 instead of €4.95
-
-Ensure you're using the latest version. Prices are returned in EUR (major unit), not cents.
-
-### Widget not appearing in Admin
-
-1. Clear the `.medusa` folder in your Medusa project
-2. Restart the dev server: `npm run dev`
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+| Code | Country |
+|------|---------|
+| FR | France |
+| BE | Belgium |
+| LU | Luxembourg |
+| NL | Netherlands |
+| ES | Spain |
+| PT | Portugal |
+| DE | Germany |
+| IT | Italy |
+| AT | Austria |
 
 ## License
 
 MIT © [Théo Daguier](https://github.com/theodaguier)
 
-## Support
+## Links
 
-- 📧 Email: theo.daguier@icloud.com
-- 🐛 Issues: [GitHub Issues](https://github.com/theodaguier/medusa-fulfillment-mondialrelay/issues)
+- � [NPM Package](https://www.npmjs.com/package/medusa-mondialrelay)
+- � [GitHub Repository](https://github.com/theodaguier/medusa-mondialrelay)
+- 📧 Contact: theo.daguier@icloud.com
